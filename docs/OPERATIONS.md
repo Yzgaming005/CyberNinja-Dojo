@@ -208,3 +208,11 @@ If `--check-stale` fails:
    ```bash
    cat diagnostic/build-*.json
    ```
+
+
+## Telemetry Batch Flush Contract
+
+- Flush triggers when the event queue reaches `batchSize` events.
+- Partial batches below `batchSize` are preserved in memory until full or forced flush.
+- After a successful flush, the queue is reset and counters are updated.
+- Page unload triggers `forceFlush()` to reduce event loss.
