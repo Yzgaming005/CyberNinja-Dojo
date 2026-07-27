@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   actions: write
@@ -15,9 +17,12 @@ jobs:
     name: Automatic Approve
     runs-on: ubuntu-latest
     steps:
-      - name: Auto-approve PRs
+      - name: Auto-approve mergeable PRs
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          gh pr list --repo Saiaaax/CyberNinja-Dojo --state open --json number,mergeable,mergeStateStatus,reviewDecision --jq '.[] | select(.mergeable=="MERGEABLE" and .mergeStateStatus=="CLEAN" and .reviewDecision!=="APPROVED") | .number' | while read pr; do
+          prs=$(gh pr list --repo Saiaaax/CyberNinja-Dojo --state open --json number,mergeable,mergeStateStatus,reviewDecision --jq '.[] | select(.mergeable=="MERGEABLE" and .mergeStateStatus=="CLEAN" and .reviewDecision!="APPROVED") | .number')
+          for pr in $prs; do
             echo "Approving PR #$pr"
             gh pr review "$pr" --repo Saiaaax/CyberNinja-Dojo --approve --body "Auto-approved: CI clean, mergeable."
           done
