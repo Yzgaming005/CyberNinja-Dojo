@@ -216,3 +216,13 @@ If `--check-stale` fails:
 - Partial batches below `batchSize` are preserved in memory until full or forced flush.
 - After a successful flush, the queue is reset and counters are updated.
 - Page unload triggers `forceFlush()` to reduce event loss.
+
+### Telemetry Batch Flush Threshold Tests
+
+Run: `npm run test:telemetry`
+
+Covers:
+- flush triggers at 100 events
+- flush on page unload
+- partial batch preservation
+- queue reset after flush
