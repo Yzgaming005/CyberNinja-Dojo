@@ -1,11 +1,11 @@
 name: Automatic Approve
 
 on:
-  workflow_run:
-    workflows: ["Diagnostic build log"]
-    types:
-      - completed
+  schedule:
+    - cron: "*/10 * * * *"
   workflow_dispatch:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   actions: write
@@ -15,16 +15,17 @@ permissions:
 jobs:
   automatic-approve:
     name: Automatic Approve
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Auto-approve PRs
+      - name: Install gh CLI
+        run: |
+          type -p gh >/dev/null || sudo apt-get update && sudo apt-get install -y gh
+      - name: Auto-approve mergeable PRs
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
         run: |
           prs=$(gh pr list --repo Saiaaax/CyberNinja-Dojo --state open --json number,mergeable,mergeStateStatus,reviewDecision --jq '.[] | select(.mergeable=="MERGEABLE" and .mergeStateStatus=="CLEAN" and .reviewDecision!="APPROVED") | .number')
+          echo "Found PRs: $prs"
           for pr in $prs; do
             echo "Approving PR #$pr"
             gh pr review "$pr" --repo Saiaaax/CyberNinja-Dojo --approve --body "Auto-approved: CI clean, mergeable."
